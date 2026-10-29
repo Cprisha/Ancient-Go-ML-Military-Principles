@@ -142,7 +142,7 @@ Two longer recorded games, one against KataGo, are analysed in [section 13.5](#1
 
 Requirements:
 
-- Python 3.10 or later (developed and tested on 3.12)
+- Python 3.12 (developed and tested on this version; 3.10 and later are expected to work but are untested)
 - `numpy` (tested with 2.x)
 - `sgfmill`
 - `tkinter`, for the GUI only (Debian and Ubuntu: `sudo apt-get install python3-tk`)
@@ -509,7 +509,7 @@ Cautions:
 - **Status.** One full-length game against KataGo has now been recorded and is analysed in [section 13.5.1](#1351-game-against-katago). KataGo's settings, the engine's colour and the result were not recorded, so it is an observation of play and not yet a calibrated measurement. The bullets below describe what a proper evaluation still needs.
 - **Calibrated opponents.** Limit KataGo's visits (a small `maxVisits`) and/or use its **HumanSL** model, which imitates human ranks via the `humanSLProfile` setting (`rank_*` or `preaz_*` profiles, roughly 20k to 9d). See KataGo's HumanSL example config. This gives opponents of known approximate strength, which a full-strength KataGo would not.
 - **Referee harness.** Two GTP engines have to be connected and the game scored. GoGui's `gogui-twogtp` or a small script can do this; I have not written the harness. Because neither side reliably marks dead stones, plan how the result is decided (for example, ask KataGo to score the final position, or play the game out). Check which scoring commands your KataGo version supports.
-- **Games would be identical.** `gtp.py` is deterministic. Against a deterministic opponent, repeated games from the empty board would be the same game, so they add no statistical information. Vary the games with randomised openings or with randomness in the opponent and/or the engine. The recorded games confirm this: the engine gave identical replies to identical positions ([section 13.5.3](#1353-what-the-two-games-show)).
+- **Games would be identical.** `gtp.py` is deterministic. Against a deterministic opponent, repeated games from the empty board would be the same game, so they add no statistical information. Vary the games with randomised openings or with randomness in the opponent and/or the engine. The recorded games are consistent with this (two replies to identical positions matched) ([section 13.5.3](#1353-what-the-two-games-show)).
 - Alternate colors and use the same komi and rules in every game.
 
 ### 13.4 What to measure
@@ -542,11 +542,11 @@ What the record shows:
 
 - **A centre-first game.** The game opened at tengen (`K10`) and stayed in the middle: 94 of the first 100 plies (47 of 50 per side) are within five points of the centre. Neither side played on the third line or lower until move 106 (White H3) and 107 (Black J3); the first second-line moves came at 114 (White J2) and 125 (Black M2).
 - **No first-line play at all.** In 216 moves neither side played on the first line, and only 14 moves (8 Black, 6 White) were on the first two lines. The mean distance from the edge is 5.25 lines for Black and 5.24 for White, so the two sides spread over the board in the same way.
-- **Fewer local answers from the engine.** The Black player answered within two points of the previous move 50 times out of 107 (47%); White did so 28 times out of 108 (26%). With the colour inference above, the engine plays locally about half as often as KataGo and more often moves elsewhere.
+- **Local answers.** Counting a move as a local answer when it lies within two points of the previous move, Black answered locally 50 times out of 107 (47%) and White 28 times out of 108 (26%) with either Manhattan or Euclidean distance (|Δrow| + |Δcol| ≤ 2, or Euclidean ≤ 2). With Chebyshev distance (both |Δrow| and |Δcol| ≤ 2, the "within two points" square) the figures are 55% and 39%. White answers locally less often than Black under every metric, but the size of the gap depends on the metric. Whether this is a difference between the engine and KataGo also depends on the colour inference above.
 - **An even exchange.** Captures were nearly equal (about 20 against 19) and stone counts were 89 against 88 at the end of the record. No leader can be read from the move record alone, which agrees with the earlier informal games.
 - **No pass.** The pass rule (from move 100, contested points only) produced no pass in 216 moves. White played 8 moves after move 200, 2 of them on the first two lines.
 
-Reconstructed position after move 216 (`X` Black, `O` White, a lower-case letter marks the last move; dead stones are not removed):
+Reconstructed position after move 216 (`X` Black, `O` White, a lower-case letter marks the last move and is a stone of the same colour, here the White stone at S8; dead stones are not removed; 89 Black and 88 White stones):
 
 ```
     A B C D E F G H J K L M N O P Q R S T
@@ -576,27 +576,27 @@ Reconstructed position after move 216 (`X` Black, `O` White, a lower-case letter
 
 #### 13.5.2 Game against a human
 
-The source is a 328-second screen recording of the GUI (recorded on 23 August 2026) with the human playing Black (`--human-color B`) and the engine White.
+The source is a 328-second screen recording of the GUI (recorded on 23 August 2026) with the human playing Black (`--human-color B`) and the engine White. *Open point:* the first four plies are identical to the KataGo game. If Black's moves in this game were also relayed from KataGo, both games would be KataGo games and the comparisons below between the two games would be between two KataGo games. Who played Black here has to be confirmed.
 
 | | |
 |---|---|
-| Length | 278 moves played. The **last move (278, `W B6`) was the engine's**, and it was Black's turn when the human stopped playing and shut the game off. The human did not resign: the recording's last frame shows the GUI status "Black resigned", but the game was shut off by the human, so there is no result |
+| Length | 278 moves played. The **last move (278, `W B6`) was the engine's**, and it was Black's turn when the human stopped playing and shut the game off. The recording's last frame shows the GUI status "Black resigned", which the GUI shows when Resign is used, while the human states that the game was shut off and not resigned. The two accounts conflict and are not reconciled here, so no result is recorded |
 | Passes | None |
 | Captures (reconstructed) | White about 23 stones, Black about 10 |
 | Stones on the board at the end (reconstructed, dead stones included) | White 128, Black 116 |
 
 What the record shows:
 
-- **Same opening as the KataGo game.** Moves 1 to 4 are `B K10, W K8, B K12, W M10` in both games, and the engine's reply at move 8 (`L9`) is also the same. The engine's output is therefore repeatable, which is what [section 13.3](#133-katago-later) assumes. The game departs at move 5 (Black `H10` here, `G10` against KataGo).
+- **Same opening as the KataGo game.** Moves 1 to 4 are `B K10, W K8, B K12, W M10` in both games. Only White's moves 2 and 4 are replies to identical positions in the two games, and both replies match. The game departs at move 5 (Black `H10` here, `G10` against KataGo). White's `L9` at move 8 is the same in both, but it follows different stones in plies 5 to 7, so it is not evidence of repeatability.
 - **The same centre-first style.** 45 of the engine's first 50 moves are within five points of the centre; its first third-line move was K3 at move 74 and its first second-line move was K18 at move 118.
 - **Much more edge play than the KataGo game.** White played 18 of its 139 moves on the first line (13%) and 34 (24%) on the first two lines; Black played 24 (17%) and 45 (32%). After move 200 White played 24 of its 39 moves on the first two lines (62%), against 26 of 39 for Black.
-- **The game was long and the board nearly full.** It reached move 278 with no pass. The game was stopped by the human, not finished: there was no resignation, no pass and no score.
+- **The game was long and the board nearly full.** It reached move 278 with no pass. The game was not played to a scored finish: there was no pass and no score, and whether it ended by resignation is disputed (see the table).
 
 *Reconstruction caveat.* Eight moves that the text reader missed were read by eye. Two moves at the end (265 `Black T9` and 276 `White T9`) do not fit the reconstructed position, so the final stone counts and capture counts are approximate.
 
 #### 13.5.3 What the two games show
 
-1. **The engine is deterministic.** Same position, same reply (first four moves and move 8 in both games). Repeated games from the same start will repeat unless the opening or the opponent varies.
+1. **Replies to identical positions matched, twice.** Moves 2 and 4 are the only replies made to identical positions in the two games, and they are identical. That is consistent with a deterministic engine ([section 13.3](#133-katago-later)) but is two data points, not a test.
 2. **First-move behaviour is still unobserved.** The engine played White in both games, so it has never been seen choosing a first move on an empty board (the star-point openings of [section 12](#12-candidate-generation-and-the-endgamepass-rule)).
 3. **No game reached a pass.** Neither the 216-move nor the 278-move record contains a pass, so the territory-based pass rule was not exercised in a real game.
 4. **Late-game edge play is heavy in the longer game.** See 3.2; the KataGo record has none because it stops at move 216 with few late edge moves.
@@ -936,7 +936,7 @@ Move lists read from the two recordings described in [section 13.5](#135-results
 211.J18 212.K18 213.Q7 214.R7 215.R8 216.S8
 ```
 
-### C.2 Game against a human (278 moves, stopped by the human, human resigns)
+### C.2 Game against a human (278 moves, stopped by the human, no result)
 
 ```
 1.K10 2.K8 3.K12 4.M10 5.H10 6.J11 7.L11 8.L9 9.J9 10.N10
@@ -945,8 +945,8 @@ Move lists read from the two recordings described in [section 13.5](#135-results
 31.H7 32.K6 33.H6 34.L6 35.L7 36.K5 37.L8 38.M8 39.K7 40.M7
 41.M6 42.N9 43.J10 44.L7 45.G10 46.F8 47.M5 48.K4 49.L13 50.M13
 51.J13 52.N7 53.M12 54.K7 55.N6 56.O10 57.N11 58.J5 59.M11 60.E8
-61.E9 62.O7 63.P7 64.O08 65.O6 66.L5 67.L4 68.N8 69.P8 70.P10
-71.Q10 72.O09 73.P9 74.K3 75.P11 76.F7 77.O11 78.J4 79.J3 80.J14
+61.E9 62.O7 63.P7 64.O8 65.O6 66.L5 67.L4 68.N8 69.P8 70.P10
+71.Q10 72.O9 73.P9 74.K3 75.P11 76.F7 77.O11 78.J4 79.J3 80.J14
 81.J2 82.L14 83.K2 84.H13 85.L3 86.G12 87.H5 88.E10 89.H3 90.F11
 91.F9 92.O12 93.O13 94.D8 95.P12 96.F6 97.N12 98.K15 99.H4 100.K16
 101.D9 102.N13 103.C8 104.D10 105.D7 106.G7 107.E7 108.J15 109.E6 110.K17
@@ -974,4 +974,4 @@ Move lists read from the two recordings described in [section 13.5](#135-results
 
 ## Acknowledgements
 
-SGF handling uses [`sgfmill`](https://github.com/mattheww/sgfmill). KataGo was used as an informal comparison opponent during testing
+SGF handling uses [`sgfmill`](https://github.com/mattheww/sgfmill). KataGo was used as an informal comparison opponent during testing. Claude was used to polish the README.
