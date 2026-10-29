@@ -49,6 +49,7 @@ V3 is four scripts:
 17. [Troubleshooting](#17-troubleshooting)
 - [Appendix A: Design brief (the blueprint)](#appendix-a-design-brief-the-blueprint)
 - [Appendix B: The V2 source in detail](#appendix-b-the-v2-source-in-detail)
+- [Appendix C: Recorded game records](#appendix-c-recorded-game-records)
 
 ---
 
@@ -131,7 +132,7 @@ V3 has been checked in two ways.
 - Neither side moved toward passing, which is expected at that stage: V3's pass rule only applies after move 100, and only when nothing contested remains.
 - In play, the Yin–Yang evaluation and the opponent-intent reasoning behaved as designed.
 
-These games are informal observations, not a benchmark. **Playing strength has not been measured**, and the engine should be expected to be far weaker than a search-based program such as KataGo. A proper evaluation (calibrated opponents, many games, alternating colors, randomized openings) is outlined in [section 13](#13-validating-by-playing-matches-ogs-then-katago).
+Two longer recorded games, one against KataGo, are analysed in [section 13.5](#135-results-so-far-recorded-games). These games are informal observations, not a benchmark. **Playing strength has not been measured**, and the engine should be expected to be far weaker than a search-based program such as KataGo. A proper evaluation (calibrated opponents, many games, alternating colors, randomized openings) is outlined in [section 13](#13-validating-by-playing-matches-ogs-then-katago).
 
 **V2** was not evaluated for this documentation. As provided, its training loop does not update the convolution or dense layers ([B.6](#b6-findings-from-reading-and-running-the-attached-code)), so no results are reported for it.
 
@@ -505,9 +506,10 @@ Cautions:
 
 ### 13.3 KataGo (later)
 
+- **Status.** One full-length game against KataGo has now been recorded and is analysed in [section 13.5.1](#1351-game-against-katago). KataGo's settings, the engine's colour and the result were not recorded, so it is an observation of play and not yet a calibrated measurement. The bullets below describe what a proper evaluation still needs.
 - **Calibrated opponents.** Limit KataGo's visits (a small `maxVisits`) and/or use its **HumanSL** model, which imitates human ranks via the `humanSLProfile` setting (`rank_*` or `preaz_*` profiles, roughly 20k to 9d). See KataGo's HumanSL example config. This gives opponents of known approximate strength, which a full-strength KataGo would not.
 - **Referee harness.** Two GTP engines have to be connected and the game scored. GoGui's `gogui-twogtp` or a small script can do this; I have not written the harness. Because neither side reliably marks dead stones, plan how the result is decided (for example, ask KataGo to score the final position, or play the game out). Check which scoring commands your KataGo version supports.
-- **Games would be identical.** `gtp.py` is deterministic. Against a deterministic opponent, repeated games from the empty board would be the same game, so they add no statistical information. Vary the games with randomised openings or with randomness in the opponent and/or the engine.
+- **Games would be identical.** `gtp.py` is deterministic. Against a deterministic opponent, repeated games from the empty board would be the same game, so they add no statistical information. Vary the games with randomised openings or with randomness in the opponent and/or the engine. The recorded games confirm this: the engine gave identical replies to identical positions ([section 13.5.3](#1353-what-the-two-games-show)).
 - Alternate colors and use the same komi and rules in every game.
 
 ### 13.4 What to measure
@@ -519,6 +521,86 @@ Cautions:
 - **From the decision logs:** how often each component drives the choice, how the feint probability behaves in games, and whether games the engine wins differ from games it loses.
 
 Expect weak play. The engine has no reading or lookahead (§16), and OGS and KataGo opponents search deeply. The useful result is a measured strength ladder plus evidence about *how* it plays, not a high win rate.
+
+### 13.5 Results so far: recorded games
+
+Two longer games played through the GUI were recorded: one against KataGo and one against a human. Their move lists were read from the recordings, replayed through a rules engine to check legality, and are reproduced in [Appendix C](#appendix-c-recorded-game-records). They are single games, so they illustrate how the engine behaves and do not measure its strength.
+
+#### 13.5.1 Game against KataGo
+
+The source is a 20-second clip of the GUI's move-history panel scrolling from move 1 to move 216. The board itself is not visible, and neither are KataGo's settings (visit limit or HumanSL profile), the engine's colour, or the result.
+
+| | |
+|---|---|
+| Length | 216 moves (108 per side). The record ends at `216. W S8` with no result shown |
+| Passes | None |
+| Colours | Not stated in the clip. The first four moves are identical to the game against a human below, where the engine is White, and White's replies (K8, M10) are the same, so the engine is taken to be **White** and KataGo **Black**. This is an inference |
+| Captures (reconstructed) | Black about 20 stones, White about 19 |
+| Stones on the board at move 216 (reconstructed) | Black 89, White 88 |
+
+What the record shows:
+
+- **A centre-first game.** The game opened at tengen (`K10`) and stayed in the middle: 94 of the first 100 plies (47 of 50 per side) are within five points of the centre. Neither side played on the third line or lower until move 106 (White H3) and 107 (Black J3); the first second-line moves came at 114 (White J2) and 125 (Black M2).
+- **No first-line play at all.** In 216 moves neither side played on the first line, and only 14 moves (8 Black, 6 White) were on the first two lines. The mean distance from the edge is 5.25 lines for Black and 5.24 for White, so the two sides spread over the board in the same way.
+- **Fewer local answers from the engine.** The Black player answered within two points of the previous move 50 times out of 107 (47%); White did so 28 times out of 108 (26%). With the colour inference above, the engine plays locally about half as often as KataGo and more often moves elsewhere.
+- **An even exchange.** Captures were nearly equal (about 20 against 19) and stone counts were 89 against 88 at the end of the record. No leader can be read from the move record alone, which agrees with the earlier informal games.
+- **No pass.** The pass rule (from move 100, contested points only) produced no pass in 216 moves. White played 8 moves after move 200, 2 of them on the first two lines.
+
+Reconstructed position after move 216 (`X` Black, `O` White, a lower-case letter marks the last move; dead stones are not removed):
+
+```
+    A B C D E F G H J K L M N O P Q R S T
+19  . . . . . . . . . . . . . . . . . . .  19
+18  . . . . . . . . X O . . . . X . . . .  18
+17  . . . . . . . X . X X . . . . . . . .  17
+16  . . . . . . . . X X X X . X X X . . .  16
+15  . . . X . . X O X X . X X . X . . . .  15
+14  . . O O . X X X O X X X O X O . . . .  14
+13  . O X X O O O O O O X X O O . . O . .  13
+12  . X O O O O O O O X X X X X . O X X .  12
+11  . X O O O O O O X X X X X X O . O . .  11
+10  . X O O O O X X X X X O X X X O O . .  10
+ 9  . . O O O O X X X X O O O X X X O . .  9
+ 8  . O . O O O X X O O O O O O X . X o .  8
+ 7  . X O . O X X X . O O O X . O X O . .  7
+ 6  . . X O X X O O O O O O O X X . . . .  6
+ 5  . . X X X X X O O O O O X . X . . . .  5
+ 4  . . . . . X O . O O O X . X . . . . .  4
+ 3  . . . . . . . O O O X . X . . . . . .  3
+ 2  . . . . . . . . O . O X . . . . . . .  2
+ 1  . . . . . . . . . . . . . . . . . . .  1
+    A B C D E F G H J K L M N O P Q R S T
+```
+
+*Reconstruction caveat.* The moves were read from low-resolution frames. One move, 197 (`Black C13`), is illegal in the reconstructed position (it would be suicide), so some earlier move or capture was probably misread or entered differently; the capture and stone counts above are therefore approximate. Moves 76 and 116 were never fully visible in any frame and were read from partial frames (116 was corrected from the first reading because the original was impossible).
+
+#### 13.5.2 Game against a human
+
+The source is a 328-second screen recording of the GUI (recorded on 23 August 2026) with the human playing Black (`--human-color B`) and the engine White.
+
+| | |
+|---|---|
+| Length | 278 moves played. The **last move (278, `W B6`) was the engine's**, and it was Black's turn when the human stopped playing and shut the game off. The human did not resign: the recording's last frame shows the GUI status "Black resigned", but the game was shut off by the human, so there is no result |
+| Passes | None |
+| Captures (reconstructed) | White about 23 stones, Black about 10 |
+| Stones on the board at the end (reconstructed, dead stones included) | White 128, Black 116 |
+
+What the record shows:
+
+- **Same opening as the KataGo game.** Moves 1 to 4 are `B K10, W K8, B K12, W M10` in both games, and the engine's reply at move 8 (`L9`) is also the same. The engine's output is therefore repeatable, which is what [section 13.3](#133-katago-later) assumes. The game departs at move 5 (Black `H10` here, `G10` against KataGo).
+- **The same centre-first style.** 45 of the engine's first 50 moves are within five points of the centre; its first third-line move was K3 at move 74 and its first second-line move was K18 at move 118.
+- **Much more edge play than the KataGo game.** White played 18 of its 139 moves on the first line (13%) and 34 (24%) on the first two lines; Black played 24 (17%) and 45 (32%). After move 200 White played 24 of its 39 moves on the first two lines (62%), against 26 of 39 for Black.
+- **The game was long and the board nearly full.** It reached move 278 with no pass. The game was stopped by the human, not finished: there was no resignation, no pass and no score.
+
+*Reconstruction caveat.* Eight moves that the text reader missed were read by eye. Two moves at the end (265 `Black T9` and 276 `White T9`) do not fit the reconstructed position, so the final stone counts and capture counts are approximate.
+
+#### 13.5.3 What the two games show
+
+1. **The engine is deterministic.** Same position, same reply (first four moves and move 8 in both games). Repeated games from the same start will repeat unless the opening or the opponent varies.
+2. **First-move behaviour is still unobserved.** The engine played White in both games, so it has never been seen choosing a first move on an empty board (the star-point openings of [section 12](#12-candidate-generation-and-the-endgamepass-rule)).
+3. **No game reached a pass.** Neither the 216-move nor the 278-move record contains a pass, so the territory-based pass rule was not exercised in a real game.
+4. **Late-game edge play is heavy in the longer game.** See 3.2; the KataGo record has none because it stops at move 216 with few late edge moves.
+5. **Strength is still unmeasured.** Neither game has a result: the human stopped the game against them at move 278 without finishing it, and the KataGo record ends where the recording ends.
 
 ---
 
@@ -581,6 +663,8 @@ Both accept `--c-models ...` and `--sgf-dir ...`. `--verify-features` prints `"i
 - `--position` input has no history, so the opponent-intent term is off.
 - Numeric slots 17-30 are always zero (reserved); there is no komi or scoring.
 - The AI averages alignment over **all** principles in the vocabulary unless `--principles` is given.
+- **Heavy edge play in long games.** In the recorded game against a human, 62% of the engine's moves after move 200 were on the first two lines (24 of 39), and neither recorded game reached a pass ([section 13.5](#135-results-so-far-recorded-games)).
+- **First moves on an empty board are unobserved in play.** In both recorded games the engine played White ([section 13.5.3](#1353-what-the-two-games-show)).
 
 ---
 
@@ -819,6 +903,75 @@ These were established while preparing this document. Items 1 and 2 were checked
 
 ---
 
+## Appendix C: Recorded game records
+
+Move lists read from the two recordings described in [section 13.5](#135-results-so-far-recorded-games). Black plays the odd-numbered moves and White the even ones; coordinates use the GUI's human notation (columns `A–T` without `I`, rows from the bottom). The engine is White in both games (in the KataGo game this is inferred).
+
+**How they were read.** The KataGo clip shows only the move-history panel, so the moves were read from its frames, first with OCR and then by eye, and replayed through a rules engine. The human game was read from the history panel of the screen recording the same way. The reconstructions are consistent except at the points noted in sections 13.5.1 and 13.5.2 (moves 197, 265 and 276); a few lines that were cut off at the bottom of a frame were read from their upper half.
+
+### C.1 Game against KataGo (216 moves, no result shown)
+
+```
+1.K10 2.K8 3.K12 4.M10 5.G10 6.J10 7.H10 8.L9 9.K11 10.K13
+11.L13 12.L11 13.L12 14.J12 15.J13 16.J8 17.J9 18.H11 19.J11 20.H9
+21.G9 22.H13 23.H8 24.J14 25.L10 26.K7 27.K14 28.K15 29.L14 30.M12
+31.M14 32.L7 33.M13 34.F10 35.M11 36.N11 37.N12 38.K6 39.N10 40.N9
+41.O11 42.O10 43.O9 44.O8 45.P10 46.P9 47.P8 48.M7 49.Q9 50.M8
+51.M9 52.J6 53.H7 54.N8 55.N7 56.M10 57.M12 58.L6 59.M6 60.N6
+61.O6 62.M5 63.N5 64.K5 65.L5 66.L4 67.G8 68.H6 69.H9 70.M9
+71.J10 72.G11 73.L11 74.M6 75.N11 76.F9 77.P9 78.G6 79.F7 80.L5
+81.G7 82.H5 83.F6 84.G12 85.F5 86.F8 87.G5 88.E10 89.E8 90.J5
+91.E9 92.K4 93.H4 94.J4 95.P15 96.L15 97.L16 98.L8 99.K9 100.N13
+101.O10 102.P11 103.O12 104.G4 105.O14 106.H3 107.J3 108.O5 109.P5 110.K3
+111.P6 112.J13 113.O4 114.J2 115.F4 116.Q10 117.Q11 118.N4 119.M4 120.Q12
+121.N3 122.M3 123.L3 124.R11 125.M2 126.F12 127.E12 128.D10 129.E11 130.C10
+131.D11 132.M15 133.M16 134.D9 135.L17 136.E7 137.C8 138.D8 139.D7 140.E9
+141.E6 142.L2 143.E5 144.O13 145.D5 146.D6 147.C5 148.C7 149.C6 150.C9
+151.B7 152.B8 153.B10 154.C11 155.D12 156.G13 157.H14 158.F13 159.P18 160.K16
+161.K17 162.E13 163.J16 164.N14 165.J15 166.P14 167.N15 168.L15 169.M15 170.H15
+171.K15 172.O15 173.O16 174.R10 175.O14 176.E8 177.R12 178.H12 179.G14 180.R13
+181.F14 182.F11 183.S12 184.C12 185.D13 186.D14 187.C13 188.R9 189.B12 190.C14
+191.B11 192.B13 193.D13 194.D12 195.D15 196.E11 197.C13 198.D11 199.G15 200.O15
+201.P16 202.E12 203.Q16 204.J17 205.O14 206.J3 207.K16 208.Q8 209.H17 210.P7
+211.J18 212.K18 213.Q7 214.R7 215.R8 216.S8
+```
+
+### C.2 Game against a human (278 moves, stopped by the human, human resigns)
+
+```
+1.K10 2.K8 3.K12 4.M10 5.H10 6.J11 7.L11 8.L9 9.J9 10.N10
+11.H9 12.L12 13.J12 14.G10 15.H11 16.J8 17.H12 18.J10 19.K11 20.J10
+21.J11 22.K13 23.K14 24.H8 25.G9 26.G8 27.G11 28.J7 29.F10 30.J6
+31.H7 32.K6 33.H6 34.L6 35.L7 36.K5 37.L8 38.M8 39.K7 40.M7
+41.M6 42.N9 43.J10 44.L7 45.G10 46.F8 47.M5 48.K4 49.L13 50.M13
+51.J13 52.N7 53.M12 54.K7 55.N6 56.O10 57.N11 58.J5 59.M11 60.E8
+61.E9 62.O7 63.P7 64.O08 65.O6 66.L5 67.L4 68.N8 69.P8 70.P10
+71.Q10 72.O09 73.P9 74.K3 75.P11 76.F7 77.O11 78.J4 79.J3 80.J14
+81.J2 82.L14 83.K2 84.H13 85.L3 86.G12 87.H5 88.E10 89.H3 90.F11
+91.F9 92.O12 93.O13 94.D8 95.P12 96.F6 97.N12 98.K15 99.H4 100.K16
+101.D9 102.N13 103.C8 104.D10 105.D7 106.G7 107.E7 108.J15 109.E6 110.K17
+111.E5 112.L16 113.F5 114.H15 115.G5 116.M16 117.G6 118.K18 119.G4 120.M15
+121.K9 122.N15 123.L10 124.J17 125.L17 126.G15 127.F15 128.K13 129.F14 130.L18
+131.M17 132.M18 133.F13 134.N17 135.O17 136.H16 137.H17 138.O15 139.O14 140.G14
+141.F12 142.K14 143.F16 144.L12 145.G16 146.K19 147.G19 148.L13 149.T19 150.J18
+151.S18 152.H18 153.S19 154.G17 155.R19 156.L17 157.R18 158.L15 159.R17 160.P15
+161.S17 162.P14 163.T17 164.P13 165.N14 166.Q13 167.O12 168.R13 169.Q12 170.O16
+171.R11 172.J19 173.R12 174.E11 175.S12 176.S13 177.T12 178.Q14 179.T13 180.E12
+181.F17 182.R10 183.F18 184.C10 185.Q11 186.Q9 187.F19 188.E13 189.Q19 190.B10
+191.Q17 192.D12 193.C11 194.C9 195.B9 196.C7 197.B8 198.L19 199.H19 200.E14
+201.E15 202.C12 203.B12 204.B11 205.A11 206.A12 207.A13 208.A10 209.A9 210.A12
+211.B13 212.N5 213.O5 214.M4 215.N4 216.M3 217.M2 218.L2 219.N3 220.G13
+221.D14 222.H14 223.D13 224.N2 225.C13 226.M1 227.M19 228.N19 229.O18 230.Q8
+231.P19 232.P6 233.P18 234.Q7 235.Q6 236.P8 237.R6 238.L3 239.S6 240.R9
+241.T6 242.S10 243.N18 244.T10 245.O19 246.R7 247.M19 248.S9 249.S11 250.N19
+251.S14 252.T11 253.T14 254.L4 255.N5 256.B7 257.A8 258.A7 259.A6 260.R8
+261.S8 262.S7 263.T8 264.T7 265.T9 266.M2 267.N1 268.O1 269.P3 270.L1
+271.C2 272.K1 273.D4 274.J1 275.D16 276.T9 277.B18 278.B6
+(game stopped by the human; Black to move)
+```
+
+---
+
 ## Acknowledgements
 
-SGF handling uses [`sgfmill`](https://github.com/mattheww/sgfmill). KataGo was used as an informal comparison opponent during testing. Claude was used to polish the README and the syntax for the codes.
+SGF handling uses [`sgfmill`](https://github.com/mattheww/sgfmill). KataGo was used as an informal comparison opponent during testing
