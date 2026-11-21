@@ -24,7 +24,7 @@ V3 is four scripts:
 | `train.py` | Replays SGFs, joins them to principle labels, trains the NumPy network, saves weights/config/vocabulary |
 | `move.py` | Loads the trained model, generates candidates, computes `A`, `Y`, `R`, `F`, ranks moves. Also a command-line tool and verification tools |
 | `play.py` | Tkinter GUI: human vs AI or AI vs AI, candidate analysis panel, SGF export |
-| `gtp.py` | GTP (Go Text Protocol) front end: lets OGS (via `gtp2ogs`), KataGo match scripts and GoGui play against the engine |
+| `gtp.py` | GTP (Go Text Protocol) front end: lets OGS (via `gtp2ogs`), KataGo match scripts and GoGui play against the engine | Not included here
 
 ---
 
